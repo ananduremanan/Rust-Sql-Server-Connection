@@ -38,7 +38,7 @@ async fn get_vehicles() -> anyhow::Result<Vec<Vehicle>> {
 
     let rows = client
         .query(
-            "SELECT Manufacturing_Year, Make, Model FROM vehicles",
+            "SELECT Manufacturing_Year, Make, Model FROM [GRAMPRO\\40412].vehicles",
             &[&1i32],
         )
         .await?
