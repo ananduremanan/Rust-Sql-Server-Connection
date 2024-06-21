@@ -1,0 +1,14 @@
+[package]
+name = "sqlserver-query"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.86"
+dotenv = "0.15.0"
+tiberius = "0.12.2"
+
+[dependencies.async-std]
+async-std = "1.12.0"
+features = ["attributes"]
+
