@@ -10,4 +10,7 @@ env_logger = "0.11.3"
 log = "0.4.21"
 tiberius = "0.12.2"
 async-std = { version = "1.12.0", features = ["attributes"] }
-
+warp = "0.3.7"
+tokio = { version = "1", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1.0"
