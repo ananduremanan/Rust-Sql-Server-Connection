@@ -1,6 +1,3 @@
-// mod dog;
-// use crate::dog::Dog;
-
 use async_std::net::TcpStream;
 use dotenv::dotenv;
 use serde::Serialize;
@@ -24,13 +21,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .and_then(get_vehicles_handler);
 
     let routes = get_vehicles;
-
-    // let dog = Dog {
-    //     name: String::from("Pumba"),
-    //     age: 2,
-    // };
-    // dog.say_something();
-
     warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
 
     Ok(())
