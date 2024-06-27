@@ -1,9 +1,11 @@
+use anyhow::Error;
 use async_std::net::TcpStream;
+use axum::{body::Body, response::IntoResponse, response::Json, routing::get, Router};
 use dotenv::dotenv;
 use serde::Serialize;
+use serde_json::{json, Value};
 use std::env;
 use tiberius::{Client, Config};
-use warp::{Filter, Rejection, Reply};
 
 #[derive(Debug, Serialize)]
 struct Vehicle {
@@ -13,20 +15,29 @@ struct Vehicle {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() {
     dotenv().ok();
+    // build our application with a single route
+    let app = Router::new()
+        .route("/", get(|| async { "Hello, World!" }))
+        .route("/vehicles", get(get_vehicles));
 
-    let get_vehicles = warp::path("vehicles")
-        .and(warp::get())
-        .and_then(get_vehicles_handler);
-
-    let routes = get_vehicles;
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
-
-    Ok(())
+    // run our app with hyper, listening globally on port 3000
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
-async fn get_vehicles_handler() -> Result<impl Reply, Rejection> {
+async fn get_vehicles() -> impl IntoResponse {
+    match fetch_vehicles().await {
+        Ok(json) => Ok(json),
+        Err(err) => Err((
+            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+            err.to_string(),
+        )),
+    }
+}
+
+async fn fetch_vehicles() -> Result<Json<Value>, Error> {
     let connection_string = env::var("CONNECTION_STRING")
         .expect("CONNECTION_STRING must be set in .env file or environment variables");
 
@@ -35,6 +46,7 @@ async fn get_vehicles_handler() -> Result<impl Reply, Rejection> {
     let tcp = TcpStream::connect(config.get_addr())
         .await
         .expect("Failed to connect to SQL Server");
+
     tcp.set_nodelay(true).expect("Failed to set TCP_NODELAY");
 
     let mut client = Client::connect(config, tcp)
@@ -63,5 +75,5 @@ async fn get_vehicles_handler() -> Result<impl Reply, Rejection> {
         });
     }
 
-    Ok(warp::reply::json(&vehicles))
+    Ok(Json(json!({ "data": vehicles })))
 }
